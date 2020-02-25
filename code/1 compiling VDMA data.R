@@ -5,6 +5,8 @@ gta_setwd()
 project.path="0 projects/39 VDMA"
 source(paste0(project.path, "/help files/definitions.R"))
 
+
+cutoff.date="2020-01-01"
 vdma.sectors=c(0,unique(cpc.to.hs$cpc[cpc.to.hs$hs %in% vdma.hs]))
 
 ## Germany as the exporter
@@ -46,7 +48,7 @@ load("data/WTO SPS & TBT/WTO SPS & TBT database.Rdata")
 ## filtering notifications for TBT only, non-removed and if targeted, than at Germany plus announced in GTA coverage period
 notifications=subset(notifications, i.un %in% trade.partners )
 notifications=subset(notifications, intervention.type=="Technical Barrier to Trade")
-notifications=subset(notifications, (is.na(date.removed)|date.removed>="2020-01-01"))
+notifications=subset(notifications, (is.na(date.removed)|date.removed>=cutoff.date))
 nongerman.targets=targeted.jurisdictions$wto.id[! targeted.jurisdictions$wto.id %in% subset(targeted.jurisdictions, a.un==276)$wto.id]
 notifications=subset(notifications, ! wto.id %in% nongerman.targets)
 notifications=subset(notifications, date.announced>="2008-11-01")
@@ -81,7 +83,8 @@ affected <- list()
 ###### (a) third party export incentives, 
 
 #### GTA os
-gta_data_slicer(keep.in.force.on.date = "yes",
+gta_data_slicer(in.force.on.date = cutoff.date,
+                keep.in.force.on.date = "Yes",
                 affected.flows = "outward subsidy",
                 gta.evaluation = c("red","amber"),
                 affected.country = "Germany",
@@ -123,7 +126,8 @@ int.types <- list(c("c","Importer subsidies to local firms",list(types$intervent
                   c("e","All other importer policies that limit imports",list(types$intervention.type[! types$mast.chapter.id %in% c("A","B","CAP","FDI","MIG","N","P","L","TARIFF")])))
 
 for (i in int.types) {
-  gta_data_slicer(keep.in.force.on.date = "Yes",
+  gta_data_slicer(in.force.on.date = cutoff.date,
+                  keep.in.force.on.date = "Yes",
                   affected.flows = "inward",
                   gta.evaluation = c("red","amber"),
                   affected.country = "Germany",
@@ -307,7 +311,7 @@ load("data/WTO SPS & TBT/WTO SPS & TBT database.Rdata")
 ## filtering notifications for TBT only, non-removed and if targeted, than at Germany plus announced in GTA coverage period
 notifications=subset(notifications, i.un == 276 )
 notifications=subset(notifications, intervention.type=="Technical Barrier to Trade")
-notifications=subset(notifications, (is.na(date.removed)|date.removed>="2020-01-01"))
+notifications=subset(notifications, (is.na(date.removed)|date.removed>=cutoff.date))
 nonpartner.targets=targeted.jurisdictions$wto.id[! targeted.jurisdictions$wto.id %in% subset(targeted.jurisdictions, a.un %in% trade.partners)$wto.id]
 notifications=subset(notifications, ! wto.id %in% nonpartner.targets)
 notifications=subset(notifications, date.announced>="2008-11-01")
@@ -354,7 +358,8 @@ int.types <- list(c("c","Importer subsidies to local firms",list(types$intervent
                   c("e","All other importer policies that limit imports",list(types$intervention.type[! types$mast.chapter.id %in% c("A","B","CAP","FDI","MIG","N","P","L","TARIFF")])))
 
 for (i in int.types) {
-  gta_data_slicer(keep.in.force.on.date = "Yes",
+  gta_data_slicer(in.force.on.date = cutoff.date,
+                  keep.in.force.on.date = "Yes",
                   affected.flows = "inward",
                   gta.evaluation = c("red","amber"),
                   implementing.country = "Germany",

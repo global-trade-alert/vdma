@@ -8,6 +8,7 @@ gta_setwd()
 project.path="0 projects/39 VDMA/"
 
 load(paste0(project.path,"data/VDMA data.Rdata"))
+load(paste0(project.path,"data/VDMA data - GER importer.Rdata"))
 source(paste0(project.path, "help files/definitions.R"))
 
 vdma.country.un=gtalibrary::country.names$un_code[gtalibrary::country.names$name %in% vdma.countries$gta.name]
@@ -26,6 +27,9 @@ names(cpc.titles)=c("cpc","cpc.name")
 
 # "Share of German exports affected in {CPC 3-digit} by {VDMA instrument}"
 
+# check if any of the 40 trading partners has 0 trade
+nrow(subset(vdma.master, importer.un %in% vdma.country.un & trade.share == -1))
+
 # Mapping function
 map <- function(data, legend.name, color.high, color.low, marked.country, title, caption) { plot = ggplot() +
   geom_polygon(data= subset(world, country != "Antarctica"), aes(x = long, y = lat, group = group, fill = value), size = 0.15, color = "white") +
@@ -38,10 +42,10 @@ map <- function(data, legend.name, color.high, color.low, marked.country, title,
   scale_x_continuous(limits=c(-13900000,17000000))+
   labs(x="", y="", caption = caption) +
   ggtitle(title) +
-  scale_fill_gradient(name=legend.name,
+  scale_fill_gradientn(name=legend.name,
                       na.value="#c6c6c6",
-                      low = color.low,
-                      high = color.high,
+                      limits=c(0,1),
+                      colors = c(color.low, color.high),
                       labels=scales::percent,
                       breaks=seq(0,1,.2),
                       # labels=c("0","250","500","750"),
@@ -72,25 +76,6 @@ map <- function(data, legend.name, color.high, color.low, marked.country, title,
 return (plot)
 }
 
-# Function to auto linebreak text
-linebreak <- function(str, n) {
-  string <- strsplit(str, split = " ")[[1]]
-  new.string <- c()
-  counter = 1
-  while (length(string)>0) {
-    if (counter %% n == 0) {
-      new.string <- c(new.string, "\n")
-    } else {
-      new.string <- c(new.string, paste0(string[1]," "))
-      string <- string[-1]
-    }
-    counter=counter+1
-  }
-  return(paste0(new.string,collapse=""))
-}
-
-
-
 
 vdma.master$instrument[vdma.master$instrument=="Third party export incentives"]="third-party export incentives"
 vdma.master$instrument[vdma.master$instrument=="Importer TBT"]="technical barriers to trade"
@@ -98,13 +83,12 @@ vdma.master$instrument[vdma.master$instrument=="Importer subsidies to local firm
 vdma.master$instrument[vdma.master$instrument=="Importer tariff increases"]="tariffs raised by the importer"
 vdma.master$instrument[vdma.master$instrument=="All other importer policies that limit imports"]="any other trade barrier raised by the importer"
 
-  
+
 instrument.order=c("third-party export incentives",
                    "technical barriers to trade",
                    "subsidies granted by the importer to local firms",
                    "tariffs raised by the importer",
                    "any other trade barrier raised by the importer")
-
 
 i.nr=0
 for (instr in instrument.order) {
@@ -114,7 +98,7 @@ for (instr in instrument.order) {
   print(instr)
   for (c in unique(vdma.master$cpc)) {
 
-    world <- gta_plot_map_df(data=subset(vdma.master, instrument == instr & cpc == c & trade.share != -1),
+    world <- gta_plot_map_df(data=subset(vdma.master, instrument == instr & cpc == c),
                              countries="importer.un",
                              values="trade.share")
 
@@ -142,15 +126,71 @@ for (instr in instrument.order) {
     map1
 
     gta_plot_saver(plot=map1,
-                   path=output.path ,
+                   path=output.path,
                    name=plot.name,
                    pdf=T,
                    width = 21,
                    height = 14.2)
      rm(map1)
+     rm(world)
      print(c)
+     
 
   }
+  
+  
+}
+
+
+vdma.master.imports$instrument[vdma.master.imports$instrument=="Importer TBT"]="technical barriers to trade"
+vdma.master.imports$instrument[vdma.master.imports$instrument=="Importer subsidies to local firms"]="subsidies granted by Germany to local firms"
+vdma.master.imports$instrument[vdma.master.imports$instrument=="Importer tariff increases"]="tariffs raised by Germany"
+vdma.master.imports$instrument[vdma.master.imports$instrument=="All other importer policies that limit imports"]="any other trade barrier raised by Germany"
+
+
+
+instrument.importer.order=c("technical barriers to trade",
+                            "subsidies granted by Germany to local firms",
+                            "tariffs raised by Germany",
+                            "any other trade barrier raised by Germany")
+i.nr = 0
+for (instr in instrument.importer.order) {
+  
+i.nr = i.nr+1
+
+# Create maps for germany as importer
+title = paste0("Exposure of German imports to\n",instr)
+plot.name=paste0("German imports (All mechanical and plant engineering products) - Map ",i.nr," (",instr,")")
+
+world <- gta_plot_map_df(data=subset(vdma.master.imports, instrument == instr),
+                         countries="exporter.un",
+                         values="trade.share")
+
+# Apparently map plotting function has problems with only 1 and NA values, adding a 0 where it doesn't matter
+if (instr == "tariffs raised by Germany") {
+  world$value[world$country=="Haiti"] <- 0
+}
+
+map1 <- map(title = title, 
+            data=world,
+            legend.name = paste0("Share of German imports affected on 1 January 2020"),
+            color.high = color.high,
+            color.low = color.low,
+            marked.country = marked.country,
+            caption = "Sources: Global Trade Alert and WTO TBT databases, February 2020.\nNote: Priority destinations with zero German exports between 2016 and 2018 marked in blue.")
+
+map1
+
+gta_plot_saver(plot=map1,
+               path=output.path ,
+               name=plot.name,
+               pdf=T,
+               width = 21,
+               height = 14.2)
+
+rm(map1)
+rm(world)
+
 }
 
 

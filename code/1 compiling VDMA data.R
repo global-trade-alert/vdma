@@ -144,6 +144,7 @@ for (i in int.types) {
   temp$affected=1
   
   eval(parse(text=paste0("affected <- c(affected, list(",i[[1]]," = list('",i[[2]],"',temp)))")))
+  rm(temp)
   
 }
 
@@ -376,7 +377,7 @@ for (i in int.types) {
   temp$affected=1
   
   eval(parse(text=paste0("affected <- c(affected, list(",i[[1]]," = list('",i[[2]],"',temp)))")))
-  
+  rm(temp)
 }
 
 ## The loop below needs to be changed to loop over vdma.instruments. That implies change the code inside the loop too.
@@ -384,97 +385,83 @@ for (i in int.types) {
 ## I sketch out that TBT calculation at the bottom.
 
 vdma.master=data.frame()
+  
+  
+sec.codes=vdma.hs
+estimate.base=subset(trade.base.bilateral, hs6 %in% sec.codes)
 
-for(sector in vdma.sectors){
+
+if(nrow(estimate.base)>0){
   
-  
-  if(sector==0){
+  for (aff in affected) {
+    estimate=merge(estimate.base, unique(rbind(aff[[2]])), by.x=c("i.un","hs6"), by.y=c("i.un","affected.product"), all.x=T)
     
-    sec.codes=vdma.hs
     
-  }else{
+    estimate[is.na(estimate)]=0
     
-    sec.codes=vdma.hs[vdma.hs %in% cpc.to.hs$hs[cpc.to.hs$cpc==sector]]
-  }
-  
-  estimate.base=subset(trade.base.bilateral, hs6 %in% sec.codes)
-  
-  
-  if(nrow(estimate.base)>0){
-    
-    for (aff in affected) {
-      estimate=merge(estimate.base, unique(rbind(aff[[2]])), by.x=c("i.un","hs6"), by.y=c("i.un","affected.product"), all.x=T)
+    if(any(estimate$affected==1)){
       
+      estimate=merge(aggregate(trade.value ~ a.un, estimate, sum),
+                     aggregate(trade.value ~ a.un, subset(estimate, affected==1), sum),
+                     by="a.un", all=T)
       
-      estimate[is.na(estimate)]=0
+    } else{
       
-      if(any(estimate$affected==1)){
-        
-        estimate=merge(aggregate(trade.value ~ a.un, estimate, sum),
-                       aggregate(trade.value ~ a.un, subset(estimate, affected==1), sum),
-                       by="a.un", all=T)
-        
-      } else{
-        
-        estimate=aggregate(trade.value ~ a.un, estimate, sum)
-        estimate$trade.value.x=estimate$trade.value
-        estimate$trade.value=NULL
-        estimate$trade.value.y=0
-        
-      }
-      
-      estimate[is.na(estimate)]=0
-      
-      estimate$trade.share=round(estimate$trade.value.y/estimate$trade.value.x,4)
-      
-      vdma.master=rbind(vdma.master,
-                        data.frame(instrument=aff[[1]],
-                                   cpc=sector,
-                                   exporter.un=estimate$a.un,
-                                   trade.share=estimate$trade.share,
-                                   stringsAsFactors = F))
-      rm(estimate)
+      estimate=aggregate(trade.value ~ a.un, estimate, sum)
+      estimate$trade.value.x=estimate$trade.value
+      estimate$trade.value=NULL
+      estimate$trade.value.y=0
       
     }
     
+    estimate[is.na(estimate)]=0
     
-    
-    ## please add a correction that countries to which Germany does not export get marked with trade.share -1. [use trade_value_bilateral outside the loop for the vdma hs codes]
-    non.origin=country.names$un_code[! country.names$un_code %in% subset(trade.base.bilateral, hs6 %in% sec.codes)$a.un]
-    
-    vdma.master=rbind(vdma.master,
-                      data.frame(instrument=affected$b[[1]],
-                                 cpc=sector,
-                                 exporter.un=non.origin,
-                                 trade.share=-1,
-                                 stringsAsFactors = F))
+    estimate$trade.share=round(estimate$trade.value.y/estimate$trade.value.x,4)
     
     vdma.master=rbind(vdma.master,
-                      data.frame(instrument=affected$c[[1]],
-                                 cpc=sector,
-                                 exporter.un=non.origin,
-                                 trade.share=-1,
-                                 stringsAsFactors = F))
-    
-    vdma.master=rbind(vdma.master,
-                      data.frame(instrument=affected$d[[1]],
-                                 cpc=sector,
-                                 exporter.un=non.origin,
-                                 trade.share=-1,
-                                 stringsAsFactors = F))
-    
-    vdma.master=rbind(vdma.master,
-                      data.frame(instrument=affected$e[[1]],
-                                 cpc=sector,
-                                 exporter.un=non.origin,
-                                 trade.share=-1,
+                      data.frame(instrument=aff[[1]],
+                                 cpc=0,
+                                 exporter.un=estimate$a.un,
+                                 trade.share=estimate$trade.share,
                                  stringsAsFactors = F))
     rm(estimate)
     
-    
   }
-  print(sector)
+  
+  
+  
+  ## please add a correction that countries to which Germany does not export get marked with trade.share -1. [use trade_value_bilateral outside the loop for the vdma hs codes]
+  non.origin=country.names$un_code[! country.names$un_code %in% subset(trade.base.bilateral, hs6 %in% sec.codes)$a.un]
+  
+  vdma.master=rbind(vdma.master,
+                    data.frame(instrument=affected$b[[1]],
+                               cpc=0,
+                               exporter.un=non.origin,
+                               trade.share=-1,
+                               stringsAsFactors = F))
+  
+  vdma.master=rbind(vdma.master,
+                    data.frame(instrument=affected$c[[1]],
+                               cpc=0,
+                               exporter.un=non.origin,
+                               trade.share=-1,
+                               stringsAsFactors = F))
+  
+  vdma.master=rbind(vdma.master,
+                    data.frame(instrument=affected$d[[1]],
+                               cpc=0,
+                               exporter.un=non.origin,
+                               trade.share=-1,
+                               stringsAsFactors = F))
+  
+  vdma.master=rbind(vdma.master,
+                    data.frame(instrument=affected$e[[1]],
+                               cpc=0,
+                               exporter.un=non.origin,
+                               trade.share=-1,
+                               stringsAsFactors = F))
+  
 }
 
-
-save(vdma.master, file=paste0(project.path,"/data/VDMA data - GER importer.Rdata"))
+vdma.master.imports <- vdma.master
+save(vdma.master.imports, file=paste0(project.path,"/data/VDMA data - GER importer.Rdata"))

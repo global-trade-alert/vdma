@@ -7,10 +7,6 @@ source(paste0(project.path, "/help files/definitions.R"))
 
 vdma.sectors=c(0,unique(cpc.to.hs$cpc[cpc.to.hs$hs %in% vdma.hs]))
 
-# Drop the sectoral charts for CPC codes 448, 452, 469, 491, and 495.
-vdma.sectors <- vdma.sectors[! vdma.sectors %in% c(448, 452, 469, 491,495)]
-
-
 ## trade data, taking the average observed trade between 2016 and 2018
 gta_trade_value_bilateral(exporting.country = 276,
                           keep.exporter = T,

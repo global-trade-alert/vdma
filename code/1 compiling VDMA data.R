@@ -122,7 +122,7 @@ types <- gtalibrary::int.mast.types
 
 int.types <- list(c("c","Importer subsidies to local firms",list(types$intervention.type[types$mast.chapter.id %in% c("L")])),
                   c("d","Importer tariff increases",list(types$intervention.type[types$mast.chapter.id %in% c("TARIFF")])),
-                  c("e","All other importer policies that limit imports",list(types$intervention.type[! types$mast.chapter.id %in% c("P","L","TARIFF")])))
+                  c("e","All other importer policies that limit imports",list(types$intervention.type[! types$mast.chapter.id %in% c("A","B","CAP","FDI","MIG","N","P","L","TARIFF")])))
 
 for (i in int.types) {
   gta_data_slicer(keep.in.force.on.date = "Yes",

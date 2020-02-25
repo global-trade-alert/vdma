@@ -137,7 +137,7 @@ for (instr in instrument.order) {
                 color.high = color.high,
                 color.low = color.low,
                 marked.country = marked.country,
-                caption = "Sources: Global Trade Alert and WTO TBT databases, January 2020.\nNote: Destinations with zero German exports between 2016 and 2018 marked in grey.")
+                caption = "Sources: Global Trade Alert and WTO TBT databases, February 2020.\nNote: Priority destinations with zero German exports between 2016 and 2018 marked in blue.")
 
     map1
 

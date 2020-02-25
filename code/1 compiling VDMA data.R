@@ -435,40 +435,33 @@ for(sector in vdma.sectors){
     
     
     ## please add a correction that countries to which Germany does not export get marked with trade.share -1. [use trade_value_bilateral outside the loop for the vdma hs codes]
-    non.destination=country.names$un_code[! country.names$un_code %in% subset(trade.base.bilateral, hs6 %in% sec.codes)$i.un]
-    
-    vdma.master=rbind(vdma.master,
-                      data.frame(instrument=affected$a[[1]],
-                                 cpc=sector,
-                                 importer.un=non.destination,
-                                 trade.share=-1,
-                                 stringsAsFactors = F))
+    non.origin=country.names$un_code[! country.names$un_code %in% subset(trade.base.bilateral, hs6 %in% sec.codes)$a.un]
     
     vdma.master=rbind(vdma.master,
                       data.frame(instrument=affected$b[[1]],
                                  cpc=sector,
-                                 importer.un=non.destination,
+                                 exporter.un=non.origin,
                                  trade.share=-1,
                                  stringsAsFactors = F))
     
     vdma.master=rbind(vdma.master,
                       data.frame(instrument=affected$c[[1]],
                                  cpc=sector,
-                                 importer.un=non.destination,
+                                 exporter.un=non.origin,
                                  trade.share=-1,
                                  stringsAsFactors = F))
     
     vdma.master=rbind(vdma.master,
                       data.frame(instrument=affected$d[[1]],
                                  cpc=sector,
-                                 importer.un=non.destination,
+                                 exporter.un=non.origin,
                                  trade.share=-1,
                                  stringsAsFactors = F))
     
     vdma.master=rbind(vdma.master,
                       data.frame(instrument=affected$e[[1]],
                                  cpc=sector,
-                                 importer.un=non.destination,
+                                 exporter.un=non.origin,
                                  trade.share=-1,
                                  stringsAsFactors = F))
     rm(estimate)

@@ -92,16 +92,18 @@ linebreak <- function(str, n) {
 
 
 
-vdma.master$instrument[vdma.master$instrument=="all GTA and WTO TBT interventions"]="any foreign policy intervention incl. export incentives plus technical barriers to trade"
-vdma.master$instrument[vdma.master$instrument=="all GTA import-related and WTO TBT interventions"]="policies implemented by the importer incl. technical barriers to trade"
-vdma.master$instrument[vdma.master$instrument=="WTO TBT interventions"]="technical barriers to trade"
-vdma.master$instrument[vdma.master$instrument=="all GTA import-related interventions"]="policies implemented by the importer excl. technical barriers to trade"
+vdma.master$instrument[vdma.master$instrument=="Third party export incentives"]="third-party export incentives"
+vdma.master$instrument[vdma.master$instrument=="Importer TBT"]="technical barriers to trade"
+vdma.master$instrument[vdma.master$instrument=="Importer subsidies to local firms"]="subsidies granted by the importer to local firms"
+vdma.master$instrument[vdma.master$instrument=="Importer tariff increases"]="tariffs raised by the importer"
+vdma.master$instrument[vdma.master$instrument=="All other importer policies that limit imports"]="any other trade barrier raised by the importer"
 
   
-instrument.order=c("any foreign policy intervention incl. export incentives plus technical barriers to trade",
-                   "policies implemented by the importer incl. technical barriers to trade", 
+instrument.order=c("third-party export incentives",
                    "technical barriers to trade",
-                   "policies implemented by the importer excl. technical barriers to trade")
+                   "subsidies granted by the importer to local firms",
+                   "tariffs raised by the importer",
+                   "any other trade barrier raised by the importer")
 
 
 i.nr=0

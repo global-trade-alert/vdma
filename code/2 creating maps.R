@@ -29,11 +29,11 @@ names(cpc.titles)=c("cpc","cpc.name")
 # Mapping function
 map <- function(data, legend.name, color.high, color.low, marked.country, title, caption) { plot = ggplot() +
   geom_polygon(data= subset(world, country != "Antarctica"), aes(x = long, y = lat, group = group, fill = value), size = 0.15, color = "white") +
-  geom_polygon(data=subset(world, UN == marked.country), aes(x=long, y=lat, group = group), fill="#414141", size = 0.15, colour = "white") +
   geom_polygon(data=subset(world, UN %in% subset(world, value==0)$UN & UN %in% vdma.country.un), aes(x=long, y=lat, group = group), fill="#f6f6f6", size = 0.15, colour = "white") +
-  geom_polygon(data=subset(world, (UN %in% subset(world, value==-1)$UN) | (! UN %in% vdma.country.un)), aes(x=long, y=lat, group = group), fill="#c6c6c6", size = 0.15, colour = "white") +
+  geom_polygon(data=subset(world, ((UN %in% subset(world, value==-1)$UN) | (! UN %in% vdma.country.un)) &  country != "Antarctica"), aes(x=long, y=lat, group = group), fill="#c6c6c6", size = 0.15, colour = "white") +
   geom_polygon(data=subset(world, (UN %in% subset(world, value==-1)$UN) & (UN %in% vdma.country.un)), aes(x=long, y=lat, group = group), fill=gta_colour$blue[2], size = 0.15, colour = "white") + ## <- This is a line to signal top 40 countries with no exports.
   geom_polygon(data=subset(world, country == "Greenland"), aes(x=long, y=lat, group = group), fill="#c6c6c6", size = 0.15, colour = "white") +
+  geom_polygon(data=subset(world, UN == marked.country), aes(x=long, y=lat, group = group), fill="#414141", size = 0.15, colour = "white") +
   coord_fixed() + # Important to fix world map proportions
   scale_x_continuous(limits=c(-13900000,17000000))+
   labs(x="", y="", caption = caption) +

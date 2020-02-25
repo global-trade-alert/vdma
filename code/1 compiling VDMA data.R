@@ -151,8 +151,8 @@ for (i in int.types) {
 
 vdma.master=data.frame()
 
-#3 removing sector 483
-vdma.sectors=vdma.sectors[vdma.sectors!=483]
+#3 removing sector 483, 448, 452, 469, 491, and 495
+vdma.sectors=vdma.sectors[! vdma.sectors %in% c(483, 448, 452, 469, 491, 495)]
 
 
 for(sector in vdma.sectors){

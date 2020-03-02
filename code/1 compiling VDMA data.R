@@ -373,7 +373,7 @@ for (i in int.types) {
   master.sliced=subset(master.sliced, i.un==276)[,c("i.un","a.un","affected.product")]
   master.sliced=cSplit(master.sliced, which(names(master.sliced)=="affected.product"), sep=",", direction = "long")
   temp=subset(master.sliced, affected.product %in% vdma.hs)
-  temp$a.un=NULL
+  temp$i.un=NULL
   temp$affected=1
   
   eval(parse(text=paste0("affected <- c(affected, list(",i[[1]]," = list('",i[[2]],"',temp)))")))
@@ -394,9 +394,12 @@ estimate.base=subset(trade.base.bilateral, hs6 %in% sec.codes)
 if(nrow(estimate.base)>0){
   
   for (aff in affected) {
-    estimate=merge(estimate.base, unique(rbind(aff[[2]])), by.x=c("i.un","hs6"), by.y=c("i.un","affected.product"), all.x=T)
-    
-    
+
+    if (aff[[1]]=="Importer TBT") {
+      estimate=merge(estimate.base, unique(rbind(aff[[2]])), by.x=c("i.un","hs6"), by.y=c("i.un","affected.product"), all.x=T)
+    } else {
+      estimate=merge(estimate.base, unique(rbind(aff[[2]])), by.x=c("a.un","hs6"), by.y=c("a.un","affected.product"), all.x=T)
+    }
     estimate[is.na(estimate)]=0
     
     if(any(estimate$affected==1)){

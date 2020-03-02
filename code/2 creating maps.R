@@ -144,14 +144,14 @@ for (instr in instrument.order) {
 
 vdma.master.imports$instrument[vdma.master.imports$instrument=="Importer TBT"]="technical barriers to trade"
 vdma.master.imports$instrument[vdma.master.imports$instrument=="Importer subsidies to local firms"]="subsidies granted by Germany to local firms"
-vdma.master.imports$instrument[vdma.master.imports$instrument=="Importer tariff increases"]="tariffs raised by Germany"
+vdma.master.imports$instrument[vdma.master.imports$instrument=="Importer tariff increases"]="tariffs raised by the European Union"
 vdma.master.imports$instrument[vdma.master.imports$instrument=="All other importer policies that limit imports"]="any other trade barrier raised by Germany"
 
 
 
 instrument.importer.order=c("technical barriers to trade",
                             "subsidies granted by Germany to local firms",
-                            "tariffs raised by Germany",
+                            "tariffs raised by the European Union",
                             "any other trade barrier raised by Germany")
 i.nr = 0
 for (instr in instrument.importer.order) {

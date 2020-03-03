@@ -313,9 +313,33 @@ load("data/WTO SPS & TBT/WTO SPS & TBT database.Rdata")
 notifications=subset(notifications, i.un == 276 )
 notifications=subset(notifications, intervention.type=="Technical Barrier to Trade")
 notifications=subset(notifications, (is.na(date.removed)|date.removed>=cutoff.date))
+
+## adding affected jurisdictions
+## removing cases where a country is targeted that is not a German import source
 nonpartner.targets=targeted.jurisdictions$wto.id[! targeted.jurisdictions$wto.id %in% subset(targeted.jurisdictions, a.un %in% trade.partners)$wto.id]
 notifications=subset(notifications, ! wto.id %in% nonpartner.targets)
+
+
+notifications$a.un=NA
+
+## adding targeted trading partners
+if(any(targeted.jurisdictions$wto.id %in% notifications$wto.id)){stop("Correct for targeted notifications. Not a problem on 3.3.20. But needs fixing in case it happens later.")} 
+
+## adding MFN barriers = all trading partners
+global.notifications=subset(notifications, ! wto.id %in% targeted.jurisdictions$wto.id)
+
+# adding all trading partners except EU members
+global.notifications$a.un=NULL
+global.notifications$a.un=paste(trade.partners[! trade.partners %in% country.names$un_code[country.names$is.eu]], collapse=",")
+
+global.notifications=splitstackshape::cSplit(global.notifications, which(names(global.notifications)=="a.un"), direction="long", sep=",")
+notifications=rbind(subset(notifications, ! wto.id %in% global.notifications$wto.id),
+                    global.notifications)
+
+
 notifications=subset(notifications, date.announced>="2008-11-01")
+
+
 
 ## could add a filter for the presence of an implementation date ... 
 
@@ -331,11 +355,11 @@ names(products.ics)=c("wto.id",  "hs.code")
 
 products.hs=unique(rbind(products.hs, products.ics))
 
-tbt.affected=merge(notifications[,c("wto.id","i.un")], products.hs, by="wto.id", all.x=T)
+tbt.affected=merge(notifications[,c("wto.id","a.un")], products.hs, by="wto.id", all.x=T)
 
 tbt.affected=subset(tbt.affected, is.na(hs.code)==F)
-tbt.affected=unique(tbt.affected[,c("i.un","hs.code")])
-names(tbt.affected)=c("i.un","affected.product")
+tbt.affected=unique(tbt.affected[,c("a.un","hs.code")])
+names(tbt.affected)=c("a.un","affected.product")
 tbt.affected$affected=1
 
 
@@ -395,11 +419,8 @@ if(nrow(estimate.base)>0){
   
   for (aff in affected) {
 
-    if (aff[[1]]=="Importer TBT") {
-      estimate=merge(estimate.base, unique(rbind(aff[[2]])), by.x=c("i.un","hs6"), by.y=c("i.un","affected.product"), all.x=T)
-    } else {
-      estimate=merge(estimate.base, unique(rbind(aff[[2]])), by.x=c("a.un","hs6"), by.y=c("a.un","affected.product"), all.x=T)
-    }
+    estimate=merge(estimate.base, unique(rbind(aff[[2]])), by.x=c("a.un","hs6"), by.y=c("a.un","affected.product"), all.x=T)
+    
     estimate[is.na(estimate)]=0
     
     if(any(estimate$affected==1)){

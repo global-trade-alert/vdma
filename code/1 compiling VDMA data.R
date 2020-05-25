@@ -137,6 +137,11 @@ for (i in int.types) {
                   intervention.types = i[[3]],
                   keep.type = T)
   
+  # SIMON 2020-05-19: Map 5 (e): Send list of interventions for India, China, Russia, Brazil
+  if (i[[1]]=="e") {
+    output.interventions <- master.sliced
+  }
+  
   master.sliced=subset(master.sliced, a.un==276)[,c("i.un","a.un","affected.product")]
   master.sliced=cSplit(master.sliced, which(names(master.sliced)=="affected.product"), sep=",", direction = "long")
   temp=subset(master.sliced, affected.product %in% vdma.hs)
@@ -147,6 +152,15 @@ for (i in int.types) {
   rm(temp)
   
 }
+
+# SIMON 2020-05-19: Map 5 (e): Send list of interventions for India, China, Russia, Brazil
+output.interventions <- subset(output.interventions, a.un == 276)
+output.interventions <- subset(output.interventions, implementing.jurisdiction %in% c("Russia","India","China","Brazil"))
+output.interventions <- unique(output.interventions[,c("intervention.id", "implementing.jurisdiction", "title", "intervention.type", "gta.evaluation", "date.announced", "date.implemented", "date.removed","affected.product","affected.sector")])
+output.interventions$url <- paste0("http://www.globaltradealert.org/intervention/",output.interventions$intervention.id)
+output.interventions <- output.interventions[with(output.interventions, order(implementing.jurisdiction)),]
+openxlsx::write.xlsx(output.interventions, file = paste0(project.path,"/results/xlsx output/Map 5 - BRIC Interventions.xlsx"))
+
 
 ## The loop below needs to be changed to loop over vdma.instruments. That implies change the code inside the loop too.
 ##  when you do that, add an if clause for instrument=="TBT measure". in it we will have to compute the trade share without our function.
@@ -382,6 +396,7 @@ int.types <- list(c("c","Importer subsidies to local firms",list(types$intervent
                   c("d","Importer tariff increases",list(types$intervention.type[types$mast.chapter.id %in% c("TARIFF")])),
                   c("e","All other importer policies that limit imports",list(types$intervention.type[! types$mast.chapter.id %in% c("A","B","CAP","FDI","MIG","N","P","L","TARIFF")])))
 
+
 for (i in int.types) {
   gta_data_slicer(in.force.on.date = cutoff.date,
                   keep.in.force.on.date = "Yes",
@@ -394,6 +409,11 @@ for (i in int.types) {
                   intervention.types = i[[3]],
                   keep.type = T)
   
+  # SIMON 2020-05-19: Map 2G (c): Send list of subsidies measures
+  if (i[[1]]=="c") {
+    output.interventions <- master.sliced
+  }
+  
   master.sliced=subset(master.sliced, i.un==276)[,c("i.un","a.un","affected.product")]
   master.sliced=cSplit(master.sliced, which(names(master.sliced)=="affected.product"), sep=",", direction = "long")
   temp=subset(master.sliced, affected.product %in% vdma.hs)
@@ -404,12 +424,45 @@ for (i in int.types) {
   rm(temp)
 }
 
+# SIMON 2020-05-19: Map 2G (c): Send list of subsidies measures
+output.interventions <- subset(output.interventions, i.un == 276)
+output.interventions <- unique(output.interventions[,c("intervention.id","affected.jurisdiction", "title", "intervention.type", "gta.evaluation", "date.announced", "date.implemented", "date.removed","affected.product","affected.sector")])
+output.interventions$url <- paste0("http://www.globaltradealert.org/intervention/",output.interventions$intervention.id)
+output.interventions <- output.interventions[with(output.interventions, order(affected.jurisdiction)),]
+openxlsx::write.xlsx(output.interventions, file = paste0(project.path,"/results/xlsx output/Map 2G - Subsidies measures.xlsx"))
+
+# SIMON 2020-05-19: 4G (New Map): Percentage of foreign exports 
+# to Germany benefiting from export incentives
+# (f) export incentives
+
+gta_data_slicer(in.force.on.date = cutoff.date,
+                keep.in.force.on.date = "Yes",
+                affected.flows = c("outward","outward subsidy"),
+                gta.evaluation = c("red","amber"),
+                affected.country = "Germany",
+                keep.affected = T,
+                hs.codes = vdma.hs,
+                keep.hs=T,
+                intervention.types = types$intervention.type[types$mast.chapter.id %in% c("P")],
+                keep.type = T)
+
+
+master.sliced=subset(master.sliced, a.un==276)[,c("i.un","a.un","affected.product")]
+master.sliced=cSplit(master.sliced, which(names(master.sliced)=="affected.product"), sep=",", direction = "long")
+temp=subset(master.sliced, affected.product %in% vdma.hs)
+temp$a.un=NULL
+setnames(temp, "i.un","a.un") # rename column to later process in the same loop as other types
+temp$affected=1
+
+eval(parse(text=paste0("affected <- c(affected, list('f' = list('Foreign exports benefiting from export incentives',temp)))")))
+rm(temp)
+
+
 ## The loop below needs to be changed to loop over vdma.instruments. That implies change the code inside the loop too.
 ##  when you do that, add an if clause for instrument=="TBT measure". in it we will have to compute the trade share without our function.
 ## I sketch out that TBT calculation at the bottom.
 
 vdma.master=data.frame()
-  
   
 sec.codes=vdma.hs
 estimate.base=subset(trade.base.bilateral, hs6 %in% sec.codes)
@@ -487,5 +540,8 @@ if(nrow(estimate.base)>0){
   
 }
 
+
 vdma.master.imports <- vdma.master
 save(vdma.master.imports, file=paste0(project.path,"/data/VDMA data - GER importer.Rdata"))
+
+

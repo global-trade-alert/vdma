@@ -442,8 +442,8 @@ openxlsx::write.xlsx(output.interventions, file = paste0(project.path,"/results/
 
 gta_trade_coverage(gta.evaluation=c("red","amber"),
                    affected.flows = "outward subsidy",
-                   mast.chapters = "L",
-                   keep.mast = F,
+                   mast.chapters = "P",
+                   keep.mast = T,
                    hs.codes = vdma.hs,
                    keep.hs=T,
                    coverage.period = c(2020,2020),
@@ -454,14 +454,27 @@ gta_trade_coverage(gta.evaluation=c("red","amber"),
                    group.exporters = F,
                    trade.data = 2017)
 
-total.imports=aggregate(trade.value ~ a.un, subset(trade.base.bilateral, hs6 %in% vdma.hs), sum)
-data.table::setnames(total.imports, "a.un","un_code")
 
-benefitting.imports=trade.coverage.estimates[,c(2,4)]
-names(benefitting.imports)=c("name","trade.benefitting")
-benefitting.imports=merge(benefitting.imports, country.names[,c("un_code", "name")], by="name", all.x=T)
-benefitting.imports=merge(benefitting.imports, total.imports, by="un_code", all=T) ## JF: switched from all.x=T to all=T; we want total imports and that could include unaffected countries.
-benefitting.imports$benefit.share=benefitting.imports$trade.benefitting/benefitting.imports$trade.value
+gta_data_slicer(in.force.on.date = cutoff.date,
+                keep.in.force.on.date = "Yes",
+                affected.flows = "outward subsidy",
+                mast.chapters = "P",
+                keep.mast = T,
+                gta.evaluation = c("red","amber"),
+                hs.codes = vdma.hs,
+                keep.hs=T)
+
+benefitting.imports=unique(subset(master.tuple, intervention.id %in% master.sliced$intervention.id)[,c("i.un","t.un","affected.product")])
+benefitting.imports$a.un=benefitting.imports$t.un
+benefitting.imports$t.un=NULL
+
+benefitting.imports=merge(benefitting.imports, trade.base.bilateral, by.x=c("a.un","affected.product"), by.y = c("a.un", "hs6"), all.x=T)
+benefitting.imports=aggregate(trade.value ~a.un, benefitting.imports, sum)
+
+total.imports=aggregate(trade.value ~ a.un, subset(trade.base.bilateral, hs6 %in% vdma.hs), sum)
+benefitting.imports=merge(benefitting.imports, total.imports, by="a.un", all.x=T)
+benefitting.imports$benefit.share=benefitting.imports$trade.value.x/benefitting.imports$trade.value.y
+names(benefitting.imports)=c("un_code", "trade.benefitting", "trade.value","benefit.share") 
 
 save(benefitting.imports, file=paste0(project.path,"/data/VDMA data - GER benefiting imports.Rdata"))
 

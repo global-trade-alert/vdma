@@ -87,13 +87,13 @@ affected <- list()
 gta_data_slicer(in.force.on.date = cutoff.date,
                 keep.in.force.on.date = "Yes",
                 affected.flows = "outward subsidy",
+                mast.chapters = "P",
+                keep.mast = T,
                 gta.evaluation = c("red","amber"),
                 affected.country = "Germany",
                 keep.affected = T,
                 hs.codes = vdma.hs,
-                keep.hs=T,
-                intervention.types = c("Competitive devaluation","Consumption subsidy"),
-                keep.type = F)
+                keep.hs=T)
 master.sliced=subset(master.sliced, a.un==276)
 gta.os.interventions=unique(master.sliced$intervention.id)
 gta.tl=read.csv("data/database replica/gta_tariff_line.csv")

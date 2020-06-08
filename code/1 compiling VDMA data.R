@@ -74,13 +74,14 @@ tbt.affected=unique(tbt.affected[,c("i.un","hs.code")])
 names(tbt.affected)=c("i.un","affected.product")
 tbt.affected$affected=1
 
+
 # UPDATE 24.2.2020
 # Replace Maps 1-4 with five maps, each showing export exposure to a 
 # different (mutually exclusive) class of trade distortions. The five classes are 
 
 affected <- list()
 
-###### (a) third party export incentives, 
+###### (a) third party export incentives
 
 #### GTA os
 gta_data_slicer(in.force.on.date = cutoff.date,
@@ -153,7 +154,9 @@ for (i in int.types) {
   
 }
 
+### @JF: New as of 2020-05-19
 # SIMON 2020-05-19: Map 5 (e): Send list of interventions for India, China, Russia, Brazil
+# Outputting list of intervention implemented by the aforementioned countries:
 output.interventions <- subset(output.interventions, a.un == 276)
 output.interventions <- subset(output.interventions, implementing.jurisdiction %in% c("Russia","India","China","Brazil"))
 output.interventions <- unique(output.interventions[,c("intervention.id", "implementing.jurisdiction", "title", "intervention.type", "gta.evaluation", "date.announced", "date.implemented", "date.removed","affected.product","affected.sector")])
@@ -170,7 +173,6 @@ vdma.master=data.frame()
 
 #3 removing sector 483, 448, 452, 469, 491, and 495
 vdma.sectors=vdma.sectors[! vdma.sectors %in% c(483, 448, 452, 469, 491, 495)]
-
 
 for(sector in vdma.sectors){
   
@@ -431,31 +433,39 @@ output.interventions$url <- paste0("http://www.globaltradealert.org/intervention
 output.interventions <- output.interventions[with(output.interventions, order(affected.jurisdiction)),]
 openxlsx::write.xlsx(output.interventions, file = paste0(project.path,"/results/xlsx output/Map 2G - Subsidies measures.xlsx"))
 
+# @JF: New as of 2020-05-19
 # SIMON 2020-05-19: 4G (New Map): Percentage of foreign exports 
 # to Germany benefiting from export incentives
 # (f) export incentives
 
-gta_data_slicer(in.force.on.date = cutoff.date,
-                keep.in.force.on.date = "Yes",
-                affected.flows = c("outward","outward subsidy"),
-                gta.evaluation = c("red","amber"),
-                affected.country = "Germany",
-                keep.affected = T,
-                hs.codes = vdma.hs,
-                keep.hs=T,
-                intervention.types = types$intervention.type[types$mast.chapter.id %in% c("P")],
-                keep.type = T)
+# This code part is taken from 4 data queries/190517 WB query (Kee)/Benefits from own export incentives.R
 
+gta_trade_coverage(gta.evaluation=c("red","amber"),
+                   affected.flows = "outward subsidy",
+                   mast.chapters = "L",
+                   keep.mast = F,
+                   hs.codes = vdma.hs,
+                   keep.hs=T,
+                   coverage.period = c(2020,2020),
+                   trade.statistic = "value",
+                   importers = "Germany",
+                   keep.importers = T,
+                   group.importers = F,
+                   group.exporters = F,
+                   trade.data = 2017)
 
-master.sliced=subset(master.sliced, a.un==276)[,c("i.un","a.un","affected.product")]
-master.sliced=cSplit(master.sliced, which(names(master.sliced)=="affected.product"), sep=",", direction = "long")
-temp=subset(master.sliced, affected.product %in% vdma.hs)
-temp$a.un=NULL
-setnames(temp, "i.un","a.un") # rename column to later process in the same loop as other types
-temp$affected=1
+total.imports=aggregate(trade.value ~ a.un, subset(trade.base.bilateral, hs6 %in% vdma.hs), sum)
+data.table::setnames(total.imports, "a.un","un_code")
 
-eval(parse(text=paste0("affected <- c(affected, list('f' = list('Foreign exports benefiting from export incentives',temp)))")))
-rm(temp)
+benefitting.imports=trade.coverage.estimates[,c(2,4)]
+names(benefitting.imports)=c("name","trade.benefitting")
+benefitting.imports=merge(benefitting.imports, country.names[,c("un_code", "name")], by="name", all.x=T)
+benefitting.imports=merge(benefitting.imports, total.imports, by="un_code", all=T) ## JF: switched from all.x=T to all=T; we want total imports and that could include unaffected countries.
+benefitting.imports$benefit.share=benefitting.imports$trade.benefitting/benefitting.imports$trade.value
+
+save(benefitting.imports, file=paste0(project.path,"/data/VDMA data - GER benefiting imports.Rdata"))
+
+# end of changes for export incentives from 2020-05-19
 
 
 ## The loop below needs to be changed to loop over vdma.instruments. That implies change the code inside the loop too.
@@ -539,7 +549,6 @@ if(nrow(estimate.base)>0){
                                stringsAsFactors = F))
   
 }
-
 
 vdma.master.imports <- vdma.master
 save(vdma.master.imports, file=paste0(project.path,"/data/VDMA data - GER importer.Rdata"))
